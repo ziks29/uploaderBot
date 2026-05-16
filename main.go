@@ -13,12 +13,10 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -115,13 +113,9 @@ func main() {
 
 	registerCommands(dg)
 
-	log.Println("Бот запущен. Нажмите Ctrl+C для остановки.")
-
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	<-sc
-
-	log.Println("Завершение работы...")
+	log.Println("Bot started.")
+	startApp()
+	log.Println("Shutting down...")
 }
 
 // ─── User Store ──────────────────────────────────────────────────────────────

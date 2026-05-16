@@ -10,9 +10,42 @@ permissions:
   packages: write
 
 jobs:
-  binaries:
-    name: Build & Release Binaries
-    runs-on: ubuntu-latest
+  build:
+    name: Build ${{ matrix.output }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            output: uploaderBot-linux-amd64
+            ldflags: "-s -w"
+            cgo: "0"
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            output: uploaderBot-linux-arm64
+            ldflags: "-s -w"
+            cgo: "0"
+          - os: ubuntu-latest
+            goos: darwin
+            goarch: amd64
+            output: uploaderBot-darwin-amd64
+            ldflags: "-s -w"
+            cgo: "0"
+          - os: ubuntu-latest
+            goos: darwin
+            goarch: arm64
+            output: uploaderBot-darwin-arm64
+            ldflags: "-s -w"
+            cgo: "0"
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            output: uploaderBot-windows-amd64.exe
+            ldflags: "-H windowsgui -s -w"
+            cgo: "1"
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -21,17 +54,30 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Build cross-platform binaries
-        run: |
-          mkdir -p dist
-          GOOS=linux   GOARCH=amd64 go build -ldflags="-s -w" -o dist/uploaderBot-linux-amd64    .
-          GOOS=linux   GOARCH=arm64 go build -ldflags="-s -w" -o dist/uploaderBot-linux-arm64    .
-          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/uploaderBot-windows-amd64.exe .
-          GOOS=darwin  GOARCH=amd64 go build -ldflags="-s -w" -o dist/uploaderBot-darwin-amd64  .
-          GOOS=darwin  GOARCH=arm64 go build -ldflags="-s -w" -o dist/uploaderBot-darwin-arm64  .
+      - name: Build
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: ${{ matrix.cgo }}
+        run: go build -ldflags="${{ matrix.ldflags }}" -o "${{ matrix.output }}" .
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: ${{ matrix.output }}
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
         with:
           files: dist/*
           generate_release_notes: true
