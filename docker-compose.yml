@@ -1,0 +1,15 @@
+services:
+  bot:
+    image: ghcr.io/ziks29/uploaderbot:latest
+    # Or build locally:
+    # build: .
+    restart: unless-stopped
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      APPLICATION_ID: ${APPLICATION_ID}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      KEYS_FILE: /app/data/keys.json
+      # Optional: register commands only to a specific guild (faster, for testing)
+      # DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
+    volumes:
+      - ./data:/app/data

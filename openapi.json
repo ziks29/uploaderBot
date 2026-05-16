@@ -1,0 +1,1477 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "description": "This is the API server for Fivemanage, providing endpoints for media management, logging, and SDK integration.",
+        "title": "Fivemanage API",
+        "termsOfService": "https://fivemanage.com/legal/terms-of-service",
+        "contact": {
+            "name": "Support",
+            "email": "support@fivemanage.com"
+        },
+        "version": "1.0"
+    },
+    "paths": {
+        "/sdk/heartbeat": {
+            "post": {
+                "description": "Send a heartbeat to maintain an active SDK reporting session and extend token validity.",
+                "tags": [
+                    "SDK Integration"
+                ],
+                "summary": "Refresh SDK Session",
+                "parameters": [
+                    {
+                        "description": "SDK token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.SdkHeartbeatResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - missing token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - token expired or invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sdk/invalidate": {
+            "post": {
+                "description": "Manually invalidate an SDK session and its associated token.",
+                "tags": [
+                    "SDK Integration"
+                ],
+                "summary": "Terminate SDK Session",
+                "parameters": [
+                    {
+                        "description": "SDK token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Endpoint (required for fivem)",
+                        "name": "endpoint",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Resource name (required for fivem)",
+                        "name": "resourceName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SDK resource invalidated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - missing token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found - token not found or already invalidated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sdk/report": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Generate an SDK token to establish a reporting session. Required for game server integrations.",
+                "tags": [
+                    "SDK Integration"
+                ],
+                "summary": "Authorize SDK Session",
+                "parameters": [
+                    {
+                        "description": "SDK type (fivem or roblox)",
+                        "name": "sdkType",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fivem",
+                                "roblox"
+                            ]
+                        }
+                    },
+                    {
+                        "description": "Endpoint (required for fivem)",
+                        "name": "endpoint",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Resource name (required for fivem)",
+                        "name": "resourceName",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Universe ID (required for roblox)",
+                        "name": "universeId",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Job ID (required for roblox)",
+                        "name": "jobId",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.SdkTokenRefreshResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v3/file": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "List files with pagination and filtering by type or path.\nIf a custom CDN domain is configured and enabled, the response `url` will use the custom domain and `originalUrl` will contain the default storage URL.",
+                "tags": [
+                    "Files"
+                ],
+                "summary": "List All Files",
+                "parameters": [
+                    {
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Items per page (default: 50, max: 100)",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Filter by file type (image, video, audio)",
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Filter by folder path",
+                        "name": "path",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.FileListResponseV3"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Upload a file using multipart/form-data with optional metadata and path. Supports images, videos, and audio.\nIf a custom CDN domain is configured and enabled, the response `url` will use the custom domain and `originalUrl` will contain the default storage URL.",
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Upload File (Multipart)",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "description": "File to upload",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "filename": {
+                                        "description": "Custom filename",
+                                        "type": "string"
+                                    },
+                                    "path": {
+                                        "description": "Storage path (folder)",
+                                        "type": "string"
+                                    },
+                                    "metadata": {
+                                        "description": "JSON metadata",
+                                        "type": "string"
+                                    },
+                                    "retentionExempt": {
+                                        "description": "Exempt from retention policy",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.FileUploadResponseV3"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v3/file/base64": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Upload a base64 encoded file with optional metadata and path. Supports images, videos, and audio.\nIf a custom CDN domain is configured and enabled, the response `url` will use the custom domain and `originalUrl` will contain the default storage URL.",
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Upload File (Base64)",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/http_route_v3_handler_file.Base64UploadRequest"
+                            }
+                        }
+                    },
+                    "description": "Base64 upload request",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.FileUploadResponseV3"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "413": {
+                        "description": "Request Entity Too Large",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v3/file/presigned-url": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Generate a presigned URL for file upload in V3. This URL allows uploading a file directly without using an API token in the final POST.",
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Create Presigned Upload URL",
+                "parameters": [
+                    {
+                        "description": "Expiration time in Unix timestamp",
+                        "name": "expiresAt",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.PresignedUrlResponseV3"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v3/file/presigned-url/{token}": {
+            "post": {
+                "description": "Upload a file using a V3 presigned URL token. Supports all standard V3 upload fields in form-data.\nIf a custom CDN domain is configured and enabled, the response `url` will use the custom domain and `originalUrl` will contain the default storage URL.",
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Upload File via Presigned URL",
+                "parameters": [
+                    {
+                        "description": "Presigned URL token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "description": "File to upload",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "filename": {
+                                        "description": "Custom filename",
+                                        "type": "string"
+                                    },
+                                    "path": {
+                                        "description": "Folder path",
+                                        "type": "string"
+                                    },
+                                    "metadata": {
+                                        "description": "File metadata (JSON string)",
+                                        "type": "string"
+                                    },
+                                    "retention_exempt": {
+                                        "description": "Exclude from retention policy",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "file"
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.FileUploadResponseV3"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v3/file/{path}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get detailed information about a specific file by ID or storage key.\nIf a custom CDN domain is configured and enabled, the response `url` will use the custom domain and `originalUrl` will contain the default storage URL.",
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Retrieve File Metadata",
+                "parameters": [
+                    {
+                        "description": "File ID or storage key",
+                        "name": "*",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.FileDetailResponseV3"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a specific file by ID or storage key.",
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Delete File",
+                "parameters": [
+                    {
+                        "description": "File ID or storage key",
+                        "name": "*",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v3/logs": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Search and list log entries with filtering and pagination.",
+                "tags": [
+                    "Logging (Beta)"
+                ],
+                "summary": "Query Logs",
+                "parameters": [
+                    {
+                        "description": "Dataset name (alternative to X-Fivemanage-Dataset header)",
+                        "name": "dataset",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Comma-separated log levels (e.g. error,warning)",
+                        "name": "level",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Filter by resource name",
+                        "name": "resource",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Free-text search across log body and metadata values",
+                        "name": "q",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Start time (RFC 3339, e.g. 2024-01-01T00:00:00Z)",
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "End time (RFC 3339, e.g. 2024-01-02T00:00:00Z)",
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Page size (default: 50, max: 100)",
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Offset for pagination (default: 0)",
+                        "name": "offset",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Sort direction on timestamp: asc or desc (default: desc)",
+                        "name": "order",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.LogQueryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Submit one or more log entries to the logging system.",
+                "tags": [
+                    "Logging"
+                ],
+                "summary": "Ingest Logs",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/api.LogRequest"
+                                }
+                            }
+                        }
+                    },
+                    "description": "Log entries (array of objects)",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v3/logs/{traceId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve a single log entry by its trace ID.",
+                "tags": [
+                    "Logging (Beta)"
+                ],
+                "summary": "Get Log by Trace ID",
+                "parameters": [
+                    {
+                        "description": "Trace ID of the log entry",
+                        "name": "traceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Dataset name (alternative to X-Fivemanage-Dataset header)",
+                        "name": "dataset",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.LogDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/api.ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "servers": [
+        {
+            "url": "https://api.fivemanage.com/api"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "ApiKeyAuth": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header"
+            }
+        },
+        "schemas": {
+            "api.ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "example": "Error message"
+                    }
+                }
+            },
+            "api.FileDetailResponseV3": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/api.FileItemV3"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
+            "api.FileItemV3": {
+                "type": "object",
+                "properties": {
+                    "filename": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "originalUrl": {
+                        "type": "string",
+                        "example": "https://r2.fivemanage.com/23492kdx23121/7F9pGhN8qwErT1vx5aZk.jpg"
+                    },
+                    "size": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                }
+            },
+            "api.FileListResponseV3": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/api.FileItemV3"
+                        }
+                    },
+                    "pagination": {
+                        "$ref": "#/components/schemas/api.PaginationV3"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
+            "api.FileUploadResponseDataV3": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "7F9pGhN8qwErT1vx5aZk"
+                    },
+                    "originalUrl": {
+                        "type": "string",
+                        "example": "https://r2.fivemanage.com/23492kdx23121/7F9pGhN8qwErT1vx5aZk.jpg"
+                    },
+                    "url": {
+                        "type": "string",
+                        "example": "https://r2.fivemanage.com/23492kdx23121/7F9pGhN8qwErT1vx5aZk.jpg"
+                    }
+                }
+            },
+            "api.FileUploadResponseV3": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/api.FileUploadResponseDataV3"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "ok"
+                    }
+                }
+            },
+            "api.LogDetailResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/api.LogEntryResponse"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
+            "api.LogEntryResponse": {
+                "type": "object",
+                "properties": {
+                    "body": {
+                        "type": "string"
+                    },
+                    "level": {
+                        "type": "string"
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "parentId": {
+                        "type": "string"
+                    },
+                    "resource": {
+                        "type": "string"
+                    },
+                    "timestamp": {
+                        "type": "string"
+                    },
+                    "traceId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "api.LogQueryPagination": {
+                "type": "object",
+                "properties": {
+                    "hasMore": {
+                        "type": "boolean"
+                    },
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "offset": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "api.LogQueryResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/api.LogEntryResponse"
+                        }
+                    },
+                    "pagination": {
+                        "$ref": "#/components/schemas/api.LogQueryPagination"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                }
+            },
+            "api.LogRequest": {
+                "type": "object",
+                "properties": {
+                    "level": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "resource": {
+                        "type": "string"
+                    }
+                }
+            },
+            "api.PaginationV3": {
+                "type": "object",
+                "properties": {
+                    "limit": {
+                        "type": "integer"
+                    },
+                    "page": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "api.PresignedUrlResponseDataV3": {
+                "type": "object",
+                "properties": {
+                    "presignedUrl": {
+                        "type": "string",
+                        "example": "https://fmapi.net/api/v3/file/presigned-url/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    }
+                }
+            },
+            "api.PresignedUrlResponseV3": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/api.PresignedUrlResponseDataV3"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "ok"
+                    }
+                }
+            },
+            "api.SdkHeartbeatResponse": {
+                "type": "object",
+                "properties": {
+                    "expiresAt": {
+                        "type": "string",
+                        "example": "2024-03-24T15:04:05Z"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Heartbeat received"
+                    }
+                }
+            },
+            "api.SdkTokenRefreshResponse": {
+                "type": "object",
+                "properties": {
+                    "expiresAt": {
+                        "type": "string",
+                        "example": "2024-03-24T15:04:05Z"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Existing SDK token refreshed"
+                    }
+                }
+            },
+            "api.SdkTokenResponse": {
+                "type": "object",
+                "properties": {
+                    "endpoint": {
+                        "type": "string",
+                        "example": "https://server.example.com"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "example": "2024-03-24T15:04:05Z"
+                    },
+                    "id": {
+                        "type": "string",
+                        "example": "7F9pGhN8qwErT1vx5aZk"
+                    },
+                    "jobId": {
+                        "type": "string",
+                        "example": "Server1"
+                    },
+                    "lastHeartbeat": {
+                        "type": "string",
+                        "example": "2024-03-24T15:03:05Z"
+                    },
+                    "resourceName": {
+                        "type": "string",
+                        "example": "my-resource"
+                    },
+                    "sdkType": {
+                        "type": "string",
+                        "enum": [
+                            "fivem",
+                            "roblox"
+                        ],
+                        "example": "fivem"
+                    },
+                    "teamId": {
+                        "type": "string",
+                        "example": "5F2gRhJ9qwXrZ3vx7aYk"
+                    },
+                    "token": {
+                        "type": "string",
+                        "example": "3yHq8g4K2Lm5pR7zX1aN9bV6cT0jE3sD"
+                    },
+                    "universeId": {
+                        "type": "string",
+                        "example": "12345"
+                    }
+                }
+            },
+            "api.SuccessResponse": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "example": "ok"
+                    }
+                }
+            },
+            "http_route_v3_handler_file.Base64UploadRequest": {
+                "type": "object",
+                "properties": {
+                    "base64": {
+                        "type": "string"
+                    },
+                    "filename": {
+                        "type": "string"
+                    },
+                    "metadata": {
+                        "type": "string"
+                    },
+                    "path": {
+                        "type": "string"
+                    },
+                    "retentionExempt": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        }
+    }
+}
