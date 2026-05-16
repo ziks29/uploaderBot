@@ -95,7 +95,7 @@ func main() {
 
 	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
-		log.Fatalf("Ошибка создания Discord сессии: %v", err)
+		log.Fatalf("Failed to create Discord session: %v", err)
 	}
 
 	dg.AddHandler(onReady)
@@ -104,10 +104,11 @@ func main() {
 	dg.AddHandler(onGuildMemberAdd)
 
 	dg.Identify.Intents = discordgo.IntentsDirectMessages |
-		discordgo.IntentsGuildMembers
+		discordgo.IntentsGuildMembers |
+		discordgo.IntentsGuilds
 
 	if err := dg.Open(); err != nil {
-		log.Fatalf("Ошибка подключения: %v", err)
+		log.Fatalf("Failed to connect: %v", err)
 	}
 	defer dg.Close()
 
@@ -326,9 +327,9 @@ func getLang(userID string) string {
 func registerCommands(s *discordgo.Session) {
 	guildID := os.Getenv("DISCORD_GUILD_ID")
 	if guildID != "" {
-		log.Printf("Регистрация команд для сервера: %s", guildID)
+		log.Printf("Registering commands for guild: %s", guildID)
 	} else {
-		log.Println("Регистрация глобальных команд (может занять до 1 часа)")
+		log.Println("Registering global commands (may take up to 1 hour)")
 	}
 
 	commands := []*discordgo.ApplicationCommand{
@@ -393,9 +394,9 @@ func registerCommands(s *discordgo.Session) {
 	for _, cmd := range commands {
 		_, err := s.ApplicationCommandCreate(appID, guildID, cmd)
 		if err != nil {
-			log.Printf("Ошибка регистрации команды '%s': %v", cmd.Name, err)
+			log.Printf("Failed to register command '%s': %v", cmd.Name, err)
 		} else {
-			log.Printf("Команда зарегистрирована: /%s", cmd.Name)
+			log.Printf("Command registered: /%s", cmd.Name)
 		}
 	}
 }
@@ -446,7 +447,7 @@ func onInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 		if err != nil {
-			log.Printf("Ошибка подтверждения /setkey: %v", err)
+			log.Printf("Failed to defer /setkey: %v", err)
 			return
 		}
 
@@ -472,7 +473,7 @@ func onInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Flags:      discordgo.MessageFlagsEphemeral,
 			Components: welcomeComponents(userID),
 		})
-		log.Printf("Пользователь %s установил API ключ", userID)
+		log.Printf("User %s saved API key", userID)
 
 	case "removekey":
 		user, _ := store.Get(userID)
@@ -789,10 +790,10 @@ func processAttachment(s *discordgo.Session, channelID string, attachment *disco
 		},
 	})
 	if err != nil {
-		log.Printf("Ошибка редактирования сообщения: %v", err)
+		log.Printf("Failed to edit message: %v", err)
 	}
 
-	log.Printf("Загружено: %s → %s (id: %s)", attachment.Filename, result.Data.URL, result.Data.ID)
+	log.Printf("Uploaded: %s → %s (id: %s)", attachment.Filename, result.Data.URL, result.Data.ID)
 }
 
 func processURL(s *discordgo.Session, channelID string, url string, apiKey string, userID string) {
@@ -1069,38 +1070,38 @@ func handleButton(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 
-	log.Printf("Удалён файл %s пользователем %s", fileID, ownerID)
+	log.Printf("Deleted file %s by user %s", fileID, ownerID)
 }
 
 func handleModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	data := i.ModalSubmitData()
-	log.Printf("Получена отправка модального окна ID: %s", data.CustomID)
+	log.Printf("Modal submit received, ID: %s", data.CustomID)
 
 	if data.CustomID != "api_key_modal" {
-		log.Printf("Неизвестный ID модального окна: %s", data.CustomID)
+		log.Printf("Unknown modal ID: %s", data.CustomID)
 		return
 	}
 
 	// Safety check for components
 	if len(data.Components) == 0 {
-		log.Println("Ошибка: в модальном окне нет компонентов")
+		log.Println("Error: modal has no components")
 		return
 	}
 
 	row, ok := data.Components[0].(*discordgo.ActionsRow)
 	if !ok || len(row.Components) == 0 {
-		log.Println("Ошибка: не удалось получить ActionsRow или компоненты в нем")
+		log.Println("Error: failed to get ActionsRow or its components")
 		return
 	}
 
 	input, ok := row.Components[0].(*discordgo.TextInput)
 	if !ok {
-		log.Println("Ошибка: первый компонент не является TextInput")
+		log.Println("Error: first component is not a TextInput")
 		return
 	}
 
 	apiKey := input.Value
-	log.Printf("Извлечен API ключ (длина: %d)", len(apiKey))
+	log.Printf("Extracted API key (length: %d)", len(apiKey))
 	
 	var userID string
 	if i.User != nil {
@@ -1110,11 +1111,11 @@ func handleModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if userID == "" {
-		log.Println("Ошибка: не удалось определить userID")
+		log.Println("Error: failed to determine userID")
 		return
 	}
 
-	log.Printf("Попытка подтверждения (defer) для пользователя %s", userID)
+	log.Printf("Deferring response for user %s", userID)
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -1122,11 +1123,11 @@ func handleModal(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		log.Printf("Ошибка при отправке DeferredResponse: %v", err)
+		log.Printf("Failed to send DeferredResponse: %v", err)
 		return
 	}
 
-	log.Println("Валидация ключа в Fivemanage...")
+	log.Println("Validating key with Fivemanage...")
 	valid, err := validateFivemanageKey(apiKey)
 	if err != nil || !valid {
 		log.Printf("Validation failed: %v", err)
@@ -1180,7 +1181,7 @@ func deleteFromFivemanage(fileID, apiKey string) error {
 
 func editMessage(s *discordgo.Session, channelID, messageID, content string) {
 	if _, err := s.ChannelMessageEdit(channelID, messageID, content); err != nil {
-		log.Printf("Ошибка редактирования сообщения: %v", err)
+		log.Printf("Failed to edit message: %v", err)
 	}
 }
 
