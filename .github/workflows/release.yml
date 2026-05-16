@@ -54,6 +54,13 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Embed Windows icon & manifest
+        if: matrix.goos == 'windows'
+        shell: bash
+        run: |
+          go install github.com/tc-hib/go-winres@latest
+          go-winres make
+
       - name: Build
         shell: bash
         env:

@@ -1,0 +1,17 @@
+{
+    "RT_GROUP_ICON": {
+        "APP": {
+            "": [{"path": "../logo_v1.png"}]
+        }
+    },
+    "RT_MANIFEST": {
+        "#1": {
+            "0409": {
+                "description": "Fivemanage Uploader Bot",
+                "minimum-os": "win10",
+                "execution-level": "as invoker",
+                "dpi-awareness": "system"
+            }
+        }
+    }
+}
